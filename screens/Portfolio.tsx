@@ -4,6 +4,21 @@ import { Checkbox } from 'react-native-paper';
 import { getData } from "../services/api--service";
 import PortfolioTile from "../components/portfolioTile";
 
+export interface Token {
+    about: string,
+    actual_balance: string,
+    "balance": string,
+    "coin_gecko_id": string,
+    "contract_address": string,
+    "contract_decimals": number,
+    "is_verified": boolean,
+    "logo_url": string,
+    "name": string,
+    "price": number,
+    "symbol": string,
+    "total_value": string
+}
+
 function loader() {
     return (
         <View>
@@ -34,16 +49,8 @@ function SummaryComponent(walletData: any) {
     )
 }
 
-const RenderTokenDetails = ({walletData}: any) => {
-    let tokens: any;
-    tokens = [];
-    console.log('Inside render token : ', walletData);
-    walletData.record.chain_portfolios.forEach((portfolio: any) => {
-        portfolio.token_holdings.forEach((token: any) => {
-            tokens.push(token);
-        })
-    })
-
+const RenderTokenDetails = ({tokens}: any) => {
+    
     return (
         tokens.map((token: any, index: any) => {
             return (
@@ -55,9 +62,39 @@ const RenderTokenDetails = ({walletData}: any) => {
     )
 }
 
-const LastUpdated = ({walletData}: any) => {
+function setTokensList(checked: any, walletData: any, setTokens: any) {
+    if (checked) {
+        let data: Token[];
+        data = [];
+        walletData.record.chain_portfolios.forEach((portfolio: any) => {
+            portfolio.token_holdings.forEach((holding: any) => {
+                if (holding.is_verified) {
+                    data.push(holding);
+                }
+            })
+        })
+        setTokens(data);
+    } else {
+        let data: Token[];
+        data = [];
+        walletData.record.chain_portfolios.forEach((portfolio: any) => {
+            portfolio.token_holdings.forEach((holding: any) => {
+                data.push(holding);
+            })
+        })
+        setTokens(data);
+    }
+}
 
-    const [checked, setChecked] = React.useState(true);
+
+
+function LastUpdatedComponent (checked: boolean, setChecked: any, walletData: any, setTokens: any) {
+
+    function onCheck() {
+        checked = !checked;
+        setChecked(checked);
+        setTokensList(checked, walletData, setTokens);
+    }
 
     return (
         <View style={styles.lastUpdatedContainer}>
@@ -67,9 +104,7 @@ const LastUpdated = ({walletData}: any) => {
             <View style={styles.checkboxContainer}>
                 <Checkbox
                     status={checked ? 'checked' : 'unchecked'}
-                    onPress={() => {
-                        setChecked(!checked);
-                    }}
+                    onPress={() => onCheck()}
                     color={'black'}
                 />   
                 <Text>Only verified coins</Text>
@@ -83,12 +118,19 @@ export default function Portfolio() {
 
     const [walletData, setWalletData] = useState([]);
 
+    const [tokens, setTokens] = useState<Token[]>([]);
+
     const [loading, setDataLoading] = useState(true);
+
+    const [checked, setChecked] = useState(true);
+
+    let tempTokenArray: Token[];
 
     useEffect(() => {
         getData().then(function(response: any) {
-            console.log('response : ', response.data);
             setWalletData(response.data);
+            tempTokenArray = [];
+            setTokensList(checked, response.data, setTokens);
             setDataLoading(false);
         })
     }, [])
@@ -101,11 +143,11 @@ export default function Portfolio() {
                 {SummaryComponent(walletData)}
             </View>
             <View>
-                <LastUpdated walletData={walletData} />
+                {LastUpdatedComponent(checked, setChecked, walletData, setTokens)}
             </View>
             <SafeAreaView>
                     <ScrollView style={styles.tokensContainer}>
-                        <RenderTokenDetails walletData={walletData} />
+                        <RenderTokenDetails tokens={tokens} />
                     </ScrollView>
             </SafeAreaView>
         </View>

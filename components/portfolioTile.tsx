@@ -9,6 +9,9 @@ export default function PortfolioTile({token}: any) {
                     <Image style={styles.image} source={{uri: token.logo_url}}></Image>
                 </View>
                 <View>
+                    <Image style={styles.secondaryImage} source={{uri: token.logo_url}}></Image>
+                </View>
+                <View>
                     <Text style={styles.tokenName}>{token.name}</Text>
                     <Text style={styles.tokenSymbol}>{token.symbol}</Text>
                 </View>
@@ -45,7 +48,16 @@ const styles = StyleSheet.create({
     image: {
         height: "50px",
         width: "50px",
-        borderRadius: 50
+        borderRadius: 50,
+        position: "relative"
+    },
+
+    secondaryImage: {
+        height: "22px",
+        width: "22px",
+        position: "absolute",
+        left: "-36px",
+        top: "30px",
     },
 
     tokenValueContainer: {
